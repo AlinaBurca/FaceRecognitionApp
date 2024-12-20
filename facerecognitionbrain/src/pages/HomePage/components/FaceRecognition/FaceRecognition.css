@@ -1,0 +1,31 @@
+.img-div{
+    display: flex;
+    
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+   
+}
+.image-div{
+    position: absolute;
+    margin-top: 20rem;
+}
+.center{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+.img{
+    width: 300px;
+    height: auto;
+}
+.bounding-box{
+    position: absolute;
+    box-shadow: 0 0 0 3px #149df2 inset;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    cursor: pointer;
+}

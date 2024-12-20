@@ -1,0 +1,13 @@
+.Tilt{
+    background: linear-gradient(to right, #ec77ab 0%, #7873f5 100%);
+    height: 80px;
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+img{
+
+    height: 50px;
+    width: auto;
+}

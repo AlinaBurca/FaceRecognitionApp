@@ -1,0 +1,16 @@
+
+
+.form{
+    width: 500px;
+   background: #7873f5;
+   display: flex;
+   flex-direction: row;
+
+}
+
+button{
+    cursor: pointer;
+    background: #ec77ab;
+    border-radius: 3px;
+    border-style: none;
+}
