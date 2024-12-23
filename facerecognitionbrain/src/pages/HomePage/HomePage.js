@@ -1,9 +1,10 @@
 import "./HomePage.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navigation from "./components/Navigation/Navigation";
 import Rank from "./components/Rank/Rank";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
+import {jwtDecode} from "jwt-decode";
 
 import ParticlesBg from "particles-bg";
 
@@ -11,13 +12,54 @@ function HomePage({ onLogout }) {
   const [input, setInput] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [box, setBox] = useState({});
+  const [userName, setUserName] = useState(""); 
+  const [userId, setUserId] = useState("");
+  const [rank, setRank] = useState(0);  
+  
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      console.log("Decoded token: ", decodedToken);
+      setUserName(decodedToken.name);
+      setUserId(decodedToken.id); 
+    }
+  }, []); 
+  
+  useEffect(() => {
+    const fetchRank = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await fetch("http://localhost:5000/user/rank", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ id: userId }), 
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch rank");
+        }
+        const data = await response.json();
+        setRank(data.entries);
+      } catch (error) {
+        console.error("Error during fetching rank:", error.message);
+      }
+    };
+  
+    if (userId) {
+      fetchRank(); 
+    }
+  }, [userId]); 
+  
 
   const onInputChange = (event) => {
     setInput(event.target.value);
   };
 
   const calculateFaceLocation = (data) => {
-    //console.log("Data: ", data);
+    
     const clarifaiFace =
       data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById("inputimage");
@@ -35,19 +77,41 @@ function HomePage({ onLogout }) {
     console.log(box);
     setBox(box);
   };
-  const onSubmit = () => {
-    setImageUrl(input);
+  const onSubmit = async () => {
+    
+    try{
+       setImageUrl(input);
+      const token = localStorage.getItem("token");
 
-    fetch("http://localhost:5000/api/face-detection", {
+   const response = await fetch("http://localhost:5000/api/face-detection", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageUrl: imageUrl,
-      }),
+      headers: { "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+       },
+      body: JSON.stringify({ imageUrl: input }), 
     })
-      .then((response) => response.json())
-      .then((data) => displayFaceBox(calculateFaceLocation(data)))
-      .catch((err) => console.error("Eroare:", err));
+      
+    if(!response.ok){
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Face detection failed");
+
+  }
+    const data = await response.json();
+    displayFaceBox(calculateFaceLocation(data));
+    const result = await fetch("http://localhost:5000/image", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+       },
+      body: JSON.stringify({ id: userId }),
+    });
+    const number = await result.json();
+    console.log("Entries:", number.entries);
+    setRank(number.entries);
+
+}catch(error){
+  console.error("Error during face detection:", error.message);
+}
   };
 
   return (
@@ -55,7 +119,7 @@ function HomePage({ onLogout }) {
       <ParticlesBg type="cobweb" bg={true} color="#ffffff" num={200} />
       <Navigation onLogout={onLogout} />
 
-      <Rank />
+      <Rank userName={userName} rank={rank}/>
       <ImageLinkForm onInputChange={onInputChange} onSubmit={onSubmit} />
       <FaceRecognition box={box} imageUrl={imageUrl} />
     </div>

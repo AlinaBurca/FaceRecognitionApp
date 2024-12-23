@@ -1,110 +1,60 @@
-const { ClarifaiStub, grpc } = require("clarifai-nodejs-grpc");
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+
+const {handleFaceDetection} = require("./controllers/face-detection");
+const {singIn} = require("./controllers/signIn");
+const { register } = require("./controllers/register");
+const { rankUpdate } = require("./controllers/rankUpdate");
+const { rankUser } = require("./controllers/rankUser");
+const { forgotPassword } = require("./controllers/forgotPassword");
+const { ResetPassword } = require("./controllers/resetPassword");
 
 dotenv.config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 app.use(cors());
 app.use(express.json());
 
-const stub = ClarifaiStub.grpc();
-const metadata = new grpc.Metadata();
-metadata.set("authorization", `Key ${process.env.CLARIFAI_API_KEY}`);
 
-app.post("/api/face-detection", (req, res) => {
-  const { imageUrl } = req.body;
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  stub.PostModelOutputs(
-    {
-      user_app_id: {
-        user_id: process.env.CLARIFAI_USER_ID,
-        app_id: process.env.CLARIFAI_APP_ID,
-      },
-      model_id: "face-detection",
-      inputs: [
-        {
-          data: {
-            image: {
-              url: imageUrl,
-            },
-          },
-        },
-      ],
-    },
-    metadata,
-    (err, response) => {
-      if (err) {
-        console.error("Eroare API Clarifai:", err);
-        return res.status(500).json({ error: "Eroare la detecția feței" });
-      }
-
-      if (response.status.code !== 10000) {
-        console.error("Eroare API Clarifai:", response.status.description);
-        return res.status(500).json({ error: response.status.description });
-      }
-
-      res.json(response);
-    }
-  );
-});
-
-app.post("/signin", (req, res) => {
-  res.send("signin");
-});
-
-const storedHash =
-  "$2b$10$w4pHQx1F1UbXPkiR1Yskg.pEZFl60QyXbF/9vIg7RQzQ7RW5Q/Cy."; // Hash-ul din baza de date
-const enteredPassword = "parolaMeaSigura";
-
-bcrypt.compare(enteredPassword, storedHash, (err, result) => {
-  if (err) {
-    console.error(err);
-    return;
+  if (!token) {
+    return res.status(403).json({ error: 'Access denied' });
   }
-  if (result) {
-    console.log("Autentificare reușită!");
-  } else {
-    console.log("Parola este greșită.");
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded; 
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' });
   }
-});
+};
 
-const saltRounds = 10; // Numărul de runde pentru generarea salt-ului
-const plainPassword = "parolaMeaSigura";
 
-bcrypt.hash(plainPassword, saltRounds, (err, hash) => {
-  if (err) {
-    console.error(err);
-    return;
-  }
-  console.log("Parola criptată:", hash);
-  // Stochează hash-ul în baza de date
-});
+app.post("/api/face-detection", authenticateToken, handleFaceDetection);
 
-app.post("/register", (req, res) => {
-  res.send("register");
-});
+app.post("/signin", singIn);
 
-app.get("/profile/:id", (req, res) => {
-  const { id } = req.params;
-});
+app.post("/register", register);
 
-app.post("/image", (req, res) => {
-  const { id } = req.body;
-});
+
+app.put("/image", authenticateToken, rankUpdate);
+
+app.put('/user/rank', authenticateToken, rankUser);
+
+app.post('/forgot-password', forgotPassword);
+
+
+app.post('/reset-password', ResetPassword);
 
 app.listen(PORT, () => {
   console.log(`Serverul rulează pe http://localhost:${PORT}`);
 });
-
-/*
-/signin -->POST = success/fail
-/register -->POST = user
-/profile/:userId --> GET = user
-/image --> PUT -->user
-
-*/

@@ -1,42 +1,35 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./SignIn.css";
+import "../SignInPage/SignIn.css";
 
-function SignIn({ onLogin }) {
+function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
-  const [token, setToken] = useState('');
 
- 
+
 
   const handleSubmit = async (e) => {
     e.preventDefault(); 
-    const loginData={
-      email: email,
-      password: password,
-    };  
+     
     try{
-      const response = await fetch("http://localhost:5000/signin",{
+      const response = await fetch("http://localhost:5000/forgot-password",{
         method: "POST",
         headers:{
           "Content-Type" : "application/json",
         },
-        body: JSON.stringify(loginData),
+        body: JSON.stringify({email}),
       });
 
       if(!response.ok){
-        throw new Error("Invalid username or password");
+        throw new Error("Email not found");
       }
       const data= await response.json();
-      setToken(data.token);
-      localStorage.setItem("token", data.token);
-      
-      onLogin();
-      navigate("/")
+      setMessage(data.message);
+      setError("");      
     }catch(error){
       setError(error.message);
+      setMessage("");
     }
 
   };
@@ -44,7 +37,7 @@ function SignIn({ onLogin }) {
   return (
     <article className="br3 ba  b--black-10 mv4 w-100 w-50-m w-25-l mw6 shadow-5 center">
       <div className="pa4 black-80 center">
-        <h2 className="f2 fw6 center">Sign In</h2>
+        <h2 className="f2 fw6 center">Forgot Password</h2>
         <form className="measure center" onSubmit={handleSubmit}>
           <fieldset id="sign_up" className="ba b--transparent ph0 mh0">
             <div className="container">
@@ -56,25 +49,14 @@ function SignIn({ onLogin }) {
                 required
               />
             </div>
-            <div className="container">
-              <label>Password:</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
           </fieldset>
-          <button type="submit">Sign In</button>
+          <button type="submit">Send reset link</button>
         </form>
+        {message && <p style={{ color: "green" }}>{message}</p>}
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <div className="register" ><a onClick={() => navigate('/forgot-password')}>Forgot password?</a></div>
-        <div className="register" >Don't have an accout? <a onClick={() => navigate('/register')}>Register</a></div>
-
       </div>
     </article>
   );
 }
 
-export default SignIn;
+export default ForgotPassword;
