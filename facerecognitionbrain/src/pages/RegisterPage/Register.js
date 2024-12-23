@@ -56,7 +56,7 @@ function Register() {
     const { username, email, password } = form;
 
     try {
-      const response = await fetch("http://localhost:5000/register", {
+      const response = await fetch("https://facerecognitionapp-fpvf.onrender.com/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

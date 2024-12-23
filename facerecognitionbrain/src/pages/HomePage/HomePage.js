@@ -30,7 +30,7 @@ function HomePage({ onLogout }) {
     const fetchRank = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await fetch("http://localhost:5000/user/rank", {
+        const response = await fetch("https://facerecognitionapp-fpvf.onrender.com/user/rank", {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -83,7 +83,7 @@ function HomePage({ onLogout }) {
        setImageUrl(input);
       const token = localStorage.getItem("token");
 
-   const response = await fetch("http://localhost:5000/api/face-detection", {
+   const response = await fetch("https://facerecognitionapp-fpvf.onrender.com/api/face-detection", {
       method: "POST",
       headers: { "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -98,7 +98,7 @@ function HomePage({ onLogout }) {
   }
     const data = await response.json();
     displayFaceBox(calculateFaceLocation(data));
-    const result = await fetch("http://localhost:5000/image", {
+    const result = await fetch("https://facerecognitionapp-fpvf.onrender.com/image", {
       method: "PUT",
       headers: { "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

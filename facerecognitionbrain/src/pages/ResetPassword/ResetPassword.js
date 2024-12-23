@@ -30,7 +30,7 @@ function ResetPassword() {
 
     const token = searchParams.get("token"); 
     try{
-      const response = await fetch("http://localhost:5000/reset-password",{
+      const response = await fetch("https://facerecognitionapp-fpvf.onrender.com/reset-password",{
         method: "POST",
         headers:{
           "Content-Type" : "application/json",

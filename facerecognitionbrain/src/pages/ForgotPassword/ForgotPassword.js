@@ -13,7 +13,7 @@ function ForgotPassword() {
     e.preventDefault(); 
      
     try{
-      const response = await fetch("http://localhost:5000/forgot-password",{
+      const response = await fetch("https://facerecognitionapp-fpvf.onrender.com/forgot-password",{
         method: "POST",
         headers:{
           "Content-Type" : "application/json",
